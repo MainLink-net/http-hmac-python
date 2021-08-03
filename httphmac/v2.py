@@ -45,8 +45,10 @@ class V2Signer(BaseSigner):
         path = request.url.canonical_path()
         query = request.url.encoded_query()
 
+        auth_headers = {k: authheaders.get(k) for k in ["id", "nonce", "realm", "version"]}
+
         timestamp = request.get_header("x-authorization-timestamp")
-        auth_headers = self.unroll_auth_headers(authheaders, exclude_signature=True, sep='&', quote=False)
+        auth_headers = self.unroll_auth_headers(auth_headers, exclude_signature=False, sep='&', quote=False)
         base = '{0}\n{1}\n{2}\n{3}\n{4}'.format(method, host, path, query, auth_headers)
 
         cheaders = []
