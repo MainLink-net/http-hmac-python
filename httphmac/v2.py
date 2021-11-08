@@ -10,10 +10,10 @@ import time
 
 try:
     import urllib.parse as urlparse
-    from urllib.parse import quote as urlquote
+    from urllib.parse import quote as urlquote, unquote as urlunquote
 except:
     import urlparse as urlparse
-    from urllib import quote as urlquote
+    from urllib import quote as urlquote, unquote as urlunquote
 
 class V2Signer(BaseSigner):
     """Implements a signer for the 2.0 version of the Acquia HTTP HMAC spec
@@ -74,8 +74,11 @@ class V2Signer(BaseSigner):
         Keyword arguments:
         authorization -- The authorization header of any request. The header must be in a format understood by v2.
         """
-        matches = re.findall(r'(\w+)="(.*?)"', authorization)
-        return dict(matches)
+        matches = dict(re.findall(r'(\w+)="(.*?)"', authorization))
+        if "signature" in matches:
+            matches["signature"] = urlunquote(matches["signature"])
+
+        return matches
 
     def sign(self, request, authheaders, secret):
         """Returns the v2 signature appropriate for the request. The request is not changed by this function.
@@ -176,7 +179,7 @@ class V2Signer(BaseSigner):
         if exclude_signature:
             return sep.join([form.format(k, urlquote(str(v), safe='')) for k, v in ordered.items() if k != 'signature'])
         else:
-            return sep.join([form.format(k, urlquote(str(v), safe='') if k != 'signature' else str(v)) for k, v in ordered.items()])
+            return sep.join([form.format(k, urlquote(str(v), safe='')) for k, v in ordered.items()])
         # legacy bad code
         # for k, v in ordered.items():
         #     if res != "":
